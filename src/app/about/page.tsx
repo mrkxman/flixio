@@ -12,7 +12,6 @@ export default function AboutUs() {
         minHeight: '100vh',
         color: '#fff',
         fontFamily: "'Arial', sans-serif",
-        
       }}
     >
       <Navbar />
@@ -44,7 +43,7 @@ export default function AboutUs() {
               marginBottom: '20px',
             }}
           >
-            Welcome to Flixio – your ultimate destination for discovering movies and TV shows. We’re a passionate team dedicated to making the world of cinema accessible, engaging, and visually stunning.
+            Welcome to Flixio – your ultimate destination for discovering movies and TV shows. We&rsquo;re a passionate team dedicated to making the world of cinema accessible, engaging, and visually stunning.
           </p>
           <p
             style={{
