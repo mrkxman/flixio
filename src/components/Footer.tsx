@@ -97,7 +97,7 @@ function Footer() {
           </form>
         ) : (
           <p style={{ color: "lightblue", fontSize: "14px" }}>
-            Thanks for subscribing! You'll be notified shortly via email.
+            Thanks for subscribing! You&rsquo;ll be notified shortly via email.
           </p>
         )}
       </div>

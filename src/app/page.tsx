@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Navbar from '../components/Navbar';
 import MovieCard from '../components/MovieCard';
@@ -12,11 +12,25 @@ import {
 } from '../utils/api';
 import Link from 'next/link';
 
-export default function Home() {
-  const [movies, setMovies] = useState([]);
-  const [shows, setShows] = useState([]);
-  const [trending, setTrending] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
+type MediaItem = {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  backdrop_path?: string;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average?: number;
+  vote_count?: number;
+  media_type?: string;
+  overview?: string;
+};
+
+function HomeContent() {
+  const [movies, setMovies] = useState<MediaItem[]>([]);
+  const [shows, setShows] = useState<MediaItem[]>([]);
+  const [trending, setTrending] = useState<MediaItem[]>([]);
+  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [bannerIndex, setBannerIndex] = useState(0);
 
   const searchParams = useSearchParams();
@@ -87,11 +101,10 @@ export default function Home() {
                 backgroundColor: 'rgba(0, 0, 0, 0.7)',
                 zIndex: -1,
               }}
-            ></div>
-
+            />
             <img
               src={`https://image.tmdb.org/t/p/w500${banner.poster_path}`}
-              alt={banner.title || banner.name}
+              alt={banner.title || banner.name || 'Poster'}
               style={{
                 width: '300px',
                 borderRadius: '10px',
@@ -99,14 +112,13 @@ export default function Home() {
               }}
             />
             <div>
-              <h1>{banner.title || banner.name}</h1>
+              <h1>{banner.title || banner.name || 'Untitled'}</h1>
               <p>
-                {banner.release_date?.split('-')[0] ||
-                  banner.first_air_date?.split('-')[0]}{' '}
-                • {banner.vote_average?.toFixed(1)}/10 • {banner.vote_count} votes
+                {(banner.release_date || banner.first_air_date || '—').split('-')[0]} •{' '}
+                {banner.vote_average?.toFixed(1) || '0.0'}/10 • {banner.vote_count || 0} votes
               </p>
-              <p style={{ maxWidth: '600px' }}>{banner.overview}</p>
-              <Link href={`/details/${banner.id}?type=${banner.media_type}`}>
+              <p style={{ maxWidth: '600px' }}>{banner.overview || 'No overview available.'}</p>
+              <Link href={`/details/${banner.id}?type=${banner.media_type || 'movie'}`}>
                 <button
                   style={{
                     marginTop: '1rem',
@@ -129,12 +141,12 @@ export default function Home() {
             <h2>Search Results for “{query}”</h2>
             <div className="movie-grid">
               {searchResults.length > 0 ? (
-                searchResults.map((item) => (
+                searchResults.map((item: MediaItem) => (
                   <MovieCard
                     key={item.id}
                     id={item.id}
-                    title={item.title || item.name}
-                    posterPath={item.poster_path}
+                    title={item.title || item.name || 'Untitled'}
+                    posterPath={item.poster_path || ''}
                     type={item.media_type || 'movie'}
                   />
                 ))
@@ -148,12 +160,12 @@ export default function Home() {
             <section>
               <h2>Popular Movies</h2>
               <div className="movie-grid">
-                {movies.map((movie) => (
+                {movies.map((movie: MediaItem) => (
                   <MovieCard
                     key={movie.id}
                     id={movie.id}
-                    title={movie.title}
-                    posterPath={movie.poster_path}
+                    title={movie.title || 'Untitled'}
+                    posterPath={movie.poster_path || ''}
                     type="movie"
                   />
                 ))}
@@ -163,12 +175,12 @@ export default function Home() {
             <section>
               <h2>Popular TV Shows</h2>
               <div className="movie-grid">
-                {shows.map((show) => (
+                {shows.map((show: MediaItem) => (
                   <MovieCard
                     key={show.id}
                     id={show.id}
-                    title={show.name}
-                    posterPath={show.poster_path}
+                    title={show.name || 'Untitled'}
+                    posterPath={show.poster_path || ''}
                     type="tv"
                   />
                 ))}
@@ -179,5 +191,13 @@ export default function Home() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading homepage...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

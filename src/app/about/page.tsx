@@ -52,7 +52,7 @@ export default function AboutUs() {
               marginBottom: '20px',
             }}
           >
-            Built on React and powered by The Movie Database (TMDB) API, Flixio offers you a seamless browsing experience—whether you're searching for the latest trending films, exploring detailed ratings and genres, or uncovering hidden cinematic gems.
+            Built on React and powered by The Movie Database (TMDB) API, Flixio offers you a seamless browsing experience—whether you&rsquo;re searching for the latest trending films, exploring detailed ratings and genres, or uncovering hidden cinematic gems.
           </p>
           <p style={{ fontSize: '18px', lineHeight: 1.6 }}>
             Our mission is simple: to create a visually appealing, user-friendly platform that brings the magic of movies and TV directly to you. Dive in and discover your next favorite show or blockbuster film!

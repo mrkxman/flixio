@@ -5,17 +5,41 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import MovieCard from '../../../components/MovieCard';
-import Link from 'next/link';
+
+type MovieType = {
+  id: number;
+  title?: string;
+  name?: string;
+  tagline?: string;
+  overview?: string;
+  release_date?: string;
+  first_air_date?: string;
+  poster_path?: string;
+  backdrop_path?: string;
+};
+
+type Person = {
+  id: number;
+  name: string;
+  character: string;
+};
+
+type Recommendation = {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+};
 
 export default function DetailsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const id = params.id;
+  const id = params.id as string;
   const type = searchParams.get('type') || 'movie';
-  
-  const [movie, setMovie] = useState(null);
-  const [cast, setCast] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
+
+  const [movie, setMovie] = useState<MovieType | null>(null);
+  const [cast, setCast] = useState<Person[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [added, setAdded] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -27,12 +51,12 @@ export default function DetailsPage() {
           `https://api.themoviedb.org/3/${type}/${id}?api_key=c6764f777e0234ca7da5bf3c5d12cac4`
         );
         const movieData = await movieRes.json();
-        
+
         const castRes = await fetch(
           `https://api.themoviedb.org/3/${type}/${id}/credits?api_key=c6764f777e0234ca7da5bf3c5d12cac4`
         );
         const castData = await castRes.json();
-        
+
         const recRes = await fetch(
           `https://api.themoviedb.org/3/${type}/${id}/recommendations?api_key=c6764f777e0234ca7da5bf3c5d12cac4`
         );
@@ -47,7 +71,7 @@ export default function DetailsPage() {
         setLoading(false);
       }
     }
-    
+
     fetchData();
   }, [id, type]);
 
@@ -165,12 +189,12 @@ export default function DetailsPage() {
             gap: '20px',
           }}
         >
-          {recommendations.map((item) => (
+          {recommendations.map((item: Recommendation) => (
             <MovieCard
               key={item.id}
               id={item.id}
-              title={item.title || item.name}
-              posterPath={item.poster_path}
+              title={item.title || item.name || 'Untitled'}
+              posterPath={item.poster_path || ''}
               type={type}
             />
           ))}
