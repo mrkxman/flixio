@@ -1,103 +1,183 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Navbar from '../components/Navbar';
+import MovieCard from '../components/MovieCard';
+import Footer from '../components/Footer';
+import {
+  fetchPopularMovies,
+  fetchPopularTVShows,
+  fetchTrending,
+} from '../utils/api';
+import Link from 'next/link';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [movies, setMovies] = useState([]);
+  const [shows, setShows] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [bannerIndex, setBannerIndex] = useState(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const searchParams = useSearchParams();
+  const query = searchParams.get('query');
+
+  useEffect(() => {
+    async function loadData() {
+      if (query) {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/search/multi?api_key=c6764f777e0234ca7da5bf3c5d12cac4&query=${encodeURIComponent(
+            query
+          )}`
+        );
+        const data = await res.json();
+        setSearchResults(data.results || []);
+      } else {
+        const [movieData, showData, trendingData] = await Promise.all([
+          fetchPopularMovies(),
+          fetchPopularTVShows(),
+          fetchTrending(),
+        ]);
+        setMovies(movieData.results);
+        setShows(showData.results);
+        setTrending(trendingData);
+      }
+    }
+
+    loadData();
+  }, [query]);
+
+  useEffect(() => {
+    if (!query && trending.length > 0) {
+      const timer = setInterval(() => {
+        setBannerIndex((prevIndex) => (prevIndex + 1) % trending.length);
+      }, 7500);
+      return () => clearInterval(timer);
+    }
+  }, [trending, query]);
+
+  const banner = trending[bannerIndex];
+
+  return (
+    <>
+      <Navbar />
+      <main>
+        {!query && banner && (
+          <section
+            className="banner"
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '2rem',
+              backgroundImage: `url(https://image.tmdb.org/t/p/original${banner.backdrop_path})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              color: 'white',
+              zIndex: 1,
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                zIndex: -1,
+              }}
+            ></div>
+
+            <img
+              src={`https://image.tmdb.org/t/p/w500${banner.poster_path}`}
+              alt={banner.title || banner.name}
+              style={{
+                width: '300px',
+                borderRadius: '10px',
+                marginRight: '2rem',
+              }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+            <div>
+              <h1>{banner.title || banner.name}</h1>
+              <p>
+                {banner.release_date?.split('-')[0] ||
+                  banner.first_air_date?.split('-')[0]}{' '}
+                • {banner.vote_average?.toFixed(1)}/10 • {banner.vote_count} votes
+              </p>
+              <p style={{ maxWidth: '600px' }}>{banner.overview}</p>
+              <Link href={`/details/${banner.id}?type=${banner.media_type}`}>
+                <button
+                  style={{
+                    marginTop: '1rem',
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#1e90ff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                  }}
+                >
+                  Learn More
+                </button>
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {query ? (
+          <section>
+            <h2>Search Results for “{query}”</h2>
+            <div className="movie-grid">
+              {searchResults.length > 0 ? (
+                searchResults.map((item) => (
+                  <MovieCard
+                    key={item.id}
+                    id={item.id}
+                    title={item.title || item.name}
+                    posterPath={item.poster_path}
+                    type={item.media_type || 'movie'}
+                  />
+                ))
+              ) : (
+                <p>No results found.</p>
+              )}
+            </div>
+          </section>
+        ) : (
+          <>
+            <section>
+              <h2>Popular Movies</h2>
+              <div className="movie-grid">
+                {movies.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    id={movie.id}
+                    title={movie.title}
+                    posterPath={movie.poster_path}
+                    type="movie"
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h2>Popular TV Shows</h2>
+              <div className="movie-grid">
+                {shows.map((show) => (
+                  <MovieCard
+                    key={show.id}
+                    id={show.id}
+                    title={show.name}
+                    posterPath={show.poster_path}
+                    type="tv"
+                  />
+                ))}
+              </div>
+            </section>
+          </>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      <Footer />
+    </>
   );
 }
